@@ -18,7 +18,7 @@ const bulb = new FluxBulb("127.0.0.1");
 bulb.turnOn();
 ```
 
-- To use the `Greeter` class in a JavaScript file -
+- To use the `FluxBulb` class in a JavaScript file -
 
 ```js
 const FluxBulb = require('fluxjs').FluxBulb;
