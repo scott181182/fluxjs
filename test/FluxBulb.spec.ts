@@ -6,7 +6,7 @@ const flux = rewire("../src/FluxBulb");
 
 const expect = chai.expect;
 
-describe("FluxBulb", () => {
+describe("FluxBulb static", () => {
     describe("#checksum()", () => {
         it("should exist", () => {
             const checksum = flux.__get__<(arr: number[]) => number>("checksum");
@@ -135,6 +135,29 @@ describe("FluxBulb", () => {
             const colorCommand = flux.__get__<(r: number, g: number, b: number) => Buffer>("colorCommand");
             const result = colorCommand(0, 255, 255);
             expect(result).to.deep.equal(exp);
+        });
+    });
+});
+
+describe("FluxBulb", () => {
+    const dummySocket = {
+        setTimeout: (ms: number, cb: Function) => {  },
+        on: (code: string, obj: any) => {  },
+        write: (buffer: Buffer, cb: () => void) => { cb(); },
+        end: (buffer: Buffer, cb: () => void) => { cb(); }
+    };
+
+    const FluxBulb = flux.__get__("FluxBulb");
+    flux.__set__("net", {
+        connect: (port: number, host: string, cb: Function) => { return dummySocket; },
+    });
+
+    describe("#constructor()", () => {
+        it("should have default port", () => {
+            const defaultPort = flux.__get__<number>("defaultPort");
+
+            const bulb = new FluxBulb("127.0.0.1");
+            expect(bulb.port).to.equal(defaultPort);
         });
     });
 });
