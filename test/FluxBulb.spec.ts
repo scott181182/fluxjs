@@ -140,11 +140,12 @@ describe("FluxBulb static", () => {
 });
 
 describe("FluxBulb", () => {
+    let prevCommand: Buffer;
     const dummySocket = {
         setTimeout: (ms: number, cb: Function) => {  },
         on: (code: string, obj: any) => {  },
-        write: (buffer: Buffer, cb: () => void) => { cb(); },
-        end: (buffer: Buffer, cb: () => void) => { cb(); }
+        write: (buffer: Buffer, cb: () => void) => { prevCommand = buffer; cb(); },
+        end: (buffer: Buffer, cb: () => void) => { prevCommand = buffer; cb(); }
     };
 
     const FluxBulb = flux.__get__("FluxBulb");
@@ -158,6 +159,41 @@ describe("FluxBulb", () => {
 
             const bulb = new FluxBulb("127.0.0.1");
             expect(bulb.port).to.equal(defaultPort);
+        });
+    });
+
+    describe("#turn()", () => {
+        it("should try to turn on", async () => {
+            const cmdOn = flux.__get__<Buffer>("cmdOn");
+
+            const bulb = new FluxBulb("127.0.0.1");
+            bulb.turn(true);
+            expect(prevCommand).to.deep.equal(cmdOn);
+        });
+        it("should try to turn off", async () => {
+            const cmdOff = flux.__get__<Buffer>("cmdOff");
+
+            const bulb = new FluxBulb("127.0.0.1");
+            bulb.turn(false);
+            expect(prevCommand).to.deep.equal(cmdOff);
+        });
+    });
+    describe("#turnOn()", () => {
+        it("should try to turn on", async () => {
+            const cmdOn = flux.__get__<Buffer>("cmdOn");
+
+            const bulb = new FluxBulb("127.0.0.1");
+            bulb.turnOn();
+            expect(prevCommand).to.deep.equal(cmdOn);
+        });
+    });
+    describe("#turnOff()", () => {
+        it("should try to turn off", async () => {
+            const cmdOff = flux.__get__<Buffer>("cmdOff");
+
+            const bulb = new FluxBulb("127.0.0.1");
+            bulb.turnOff();
+            expect(prevCommand).to.deep.equal(cmdOff);
         });
     });
 });
