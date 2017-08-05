@@ -80,40 +80,14 @@ async function main(args: string[])
             const bulb = new FluxBulb(host, port, opts);
             bulb.setWarm(level);
         });
+    program.command("color")
+        .description("Set the bulb to a certain color")
+        .action((red, green, blue) => {
+            const bulb = new FluxBulb(host, port, opts);
+            bulb.setRGB(red, green, blue);
+        });
 
-    if(!host) { return program.usage(); }
+    if(!host) { return console.log(program.usage()); }
     program.parse(args);
-
-    /*
-    var bulb;
-    if(args[1]) {
-        var frags = args[1].split(':');
-        log.debug(frags);
-        bulb = new FluxBulb(frags[0], parseInt(frags[1]));
-    } else { bulb = new FluxBulb(); }
-
-    switch(args[2].toLowerCase())
-    {
-        case 'status':
-            var state: Buffer = await bulb.getState();
-            console.log(bufstr(state));
-            var on = state[2] == ON;
-            console.log(`State: ${on ? "ON" : "OFF"}`);
-            break;
-        case 'on':
-            bulb.turnOn();
-            break;
-        case 'off':
-            bulb.turnOff();
-            break;
-        case 'warm':
-            bulb.setWarm(parseInt(args[3]));
-            break;
-        case 'color':
-            bulb.setRGB(args[3] || 0xff, args[4] || 0xff, args[5] || 0xff);
-            break;
-    }
-    bulb.close();
-    */
 }
 if(require.main === module) { main(process.argv); }

@@ -10,10 +10,10 @@ const cmdGetTimers = makeCommand([0x22, 0x2a, 0x2b, 0x0f]);
 const cmdOn        = makeCommand([0x71, ON,   0x0f]);
 const cmdOff       = makeCommand([0x71, OFF,  0x0f]);
 
-function checksum(arr: number[]): number {
-    // tslint:disable-next-line:no-bitwise
-    return arr.reduce((acc, num) => acc + num, 0) & 0xff;
-}
+// tslint:disable-next-line:no-bitwise
+function byte(num: number): number { return num & 0xff; }
+
+function checksum(arr: number[]): number { return byte(arr.reduce((acc, num) => acc + num, 0)); }
 function makeCommand(arr: number[]): Buffer {
     arr.push(checksum(arr));
     return Buffer.from(arr);
@@ -38,10 +38,10 @@ function sendCommandRaw(socket: net.Socket, command: Buffer, keepalive = false):
 }
 
 function warmCommand(level: number): Buffer {
-    return makeCommand([ PERSIST, 0, 0, 0, Math.floor(level * 255), 0x0f, 0x0f ]);
+    return makeCommand([ PERSIST, 0, 0, 0, level <= 1 ? Math.floor(level * 255) : level, 0x0f, 0x0f ]);
 }
 function colorCommand(r: number, g: number, b: number): Buffer {
-    return makeCommand([ PERSIST, r, g, b, 0, 0xf0, 0x0f]);
+    return makeCommand([ PERSIST, byte(r), byte(g), byte(b), 0x00, 0xf0, 0x0f]);
 }
 
 interface Error {
