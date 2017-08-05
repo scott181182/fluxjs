@@ -1,10 +1,10 @@
 {
   "name": "fluxjs",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "fluxjs",
   "license": "MIT",
   "repository": "",
-  "author": "",
+  "author": "Scott Fasone",
   "keywords": [
     ""
   ],

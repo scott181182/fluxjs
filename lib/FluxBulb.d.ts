@@ -10,13 +10,13 @@ export declare class FluxBulb {
     private host;
     private port;
     private opts;
-    private socket;
     constructor(host: string, port?: number, options?: FluxBulbOptions);
+    private connect();
+    private sendCommand(cmd);
     getState(): Promise<FluxBulbState>;
-    turn(on: boolean, atomic?: boolean): void;
-    turnOn(atomic?: boolean): void;
-    turnOff(atomic?: boolean): void;
-    setWarm(level: number, atomic?: boolean): void;
-    setRGB(r: number, g: number, b: number, atomic?: boolean): void;
-    close(): void;
+    turn(on: boolean): void;
+    turnOn(): void;
+    turnOff(): void;
+    setWarm(level: number): void;
+    setRGB(r: number, g: number, b: number): void;
 }

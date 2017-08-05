@@ -5,12 +5,12 @@ export * from "./FluxBulb";
 
 /* tslint:disable:no-console */
 
-const ERROR = 0;
-const WARN  = 1;
-const INFO  = 2;
-const DEBUG = 3;
+export const ERROR = 0;
+export const WARN  = 1;
+export const INFO  = 2;
+export const DEBUG = 3;
 
-let LEVEL = WARN;
+export let LEVEL = WARN;
 
 export const log = {
     lethal: (msg: string) => {                      console.error(`[LETHAL] : ${msg}`); process.exit(1); },
@@ -61,25 +61,24 @@ async function main(args: string[])
             const bulb = new FluxBulb(host, port, opts);
             const state = await bulb.getState();
             console.log(`   On: ${state.on}`);
-            bulb.close();
         });
     program.command("on")
         .description("Turn the bulb on")
         .action(() => {
             const bulb = new FluxBulb(host, port, opts);
-            bulb.turnOn(true);
+            bulb.turnOn();
         });
     program.command("off")
         .description("Turn the bulb off")
         .action(() => {
             const bulb = new FluxBulb(host, port, opts);
-            bulb.turnOff(true);
+            bulb.turnOff();
         });
     program.command("warm")
         .description("Set the bulb to a warm white")
         .action((level) => {
             const bulb = new FluxBulb(host, port, opts);
-            bulb.setWarm(level, true);
+            bulb.setWarm(level);
         });
 
     if(!host) { return program.usage(); }

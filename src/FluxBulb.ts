@@ -22,7 +22,7 @@ function bufstr(command: Buffer): string {
     return command.toJSON().data.map((value) => (value < 16 ? "0" : "") + value.toString(16)).join(",");
 }
 
-function sendCommand(socket: net.Socket, command: Buffer, keepalive = false): Promise<string> {
+function sendCommandRaw(socket: net.Socket, command: Buffer, keepalive = false): Promise<string> {
     return new Promise((resolve, reject) => {
         if(keepalive) { socket.write(command, (err: Error) => {
             if(err) { return reject(err); }
@@ -34,7 +34,7 @@ function sendCommand(socket: net.Socket, command: Buffer, keepalive = false): Pr
             log.debug(`   Sent: ${bufstr(command)}`);
             resolve(`end[${bufstr(command)}]`);
         }); }
-    })
+    });
 }
 
 function warmCommand(level: number): Buffer {
@@ -76,57 +76,50 @@ export class FluxBulb
     private host: string;
     private port: number;
     private opts: FluxBulbOptions;
-    private socket: net.Socket;
 
     constructor(host: string, port = defaultPort, options?: FluxBulbOptions) {
         this.host = host;
         this.port = port || defaultPort;
         this.opts = options || defaultOptions;
-
-        log.debug(`Connecting to [${this.host}]...`);
-        this.socket = net.connect(this.port, this.host, () => {
-            log.debug(`Connected to [${this.host}]!`);
-        });
-        this.socket.setTimeout(this.opts.timeout, () => {
-            log.error(`Connection timed out trying to connect to ${this.host}:${this.port}`);
-            this.socket.destroy();
-        });
-
-        this.socket.on("error", (err: Error) => {
-            log.error(err.code === "ECONNREFUSED"
-                ? `Could not connect to FluxBulb@${this.host}`
-                : `There was an error with the connection:\n${err.message}`);
-        });
-        this.socket.on("data", (data: Buffer) => {
-            log.debug(`Data from [${host}]:`);
-            log.debug(`   ${bufstr(data)}`);
-        });
-        this.socket.on("close", () => { log.debug(`Disconnected from [${this.host}].`); });
     }
-
+    private connect(): Promise<net.Socket>
+    {
+        return new Promise((resolve, reject) => {
+            const sock = net.connect(this.port, this.host, () => {
+                resolve(sock);
+            });
+            sock.on("error", (err: Error) => { reject(err); });
+            sock.setTimeout(this.opts.timeout, () => { reject("Timeout Error"); });
+        });
+    }
+    private sendCommand(cmd: Buffer)
+    {
+        return this.connect().then((sock) => {
+            sendCommandRaw(sock, cmd, false);
+        });
+    }
 
 
     public getState(): Promise<FluxBulbState> {
         return new Promise((resolve, reject) => {
-            this.socket.once("data", (stateData) => {
-                resolve(new FluxBulbState(stateData));
+            this.connect().then((sock) => {
+                sock.once("data", (stateData) => {
+                    sock.destroy();
+                    resolve(new FluxBulbState(stateData));
+                });
+                sendCommandRaw(sock, cmdGetState, true);
             });
-            sendCommand(this.socket, cmdGetState);
         });
     }
 
-    public turn(on: boolean, atomic = false) {
-        sendCommand(this.socket, on ? cmdOn : cmdOff, !atomic);
-    }
-    public turnOn(atomic = false) { this.turn(true, atomic); }
-    public turnOff(atomic = false) { this.turn(false, atomic); }
+    public turn(on: boolean) { this.sendCommand(on ? cmdOn : cmdOff); }
+    public turnOn() { this.turn(true); }
+    public turnOff() { this.turn(false); }
 
-    public setWarm(level: number, atomic = false) {
-        sendCommand(this.socket, warmCommand(level), !atomic);
+    public setWarm(level: number) {
+        this.sendCommand(warmCommand(level));
     }
-    public setRGB(r: number, g: number, b: number, atomic = false) {
-        sendCommand(this.socket, colorCommand(r, g, b), !atomic);
+    public setRGB(r: number, g: number, b: number) {
+        this.sendCommand(colorCommand(r, g, b));
     }
-
-    public close() { this.socket.end(); }
 }
