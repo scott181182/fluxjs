@@ -37,7 +37,7 @@ async function main(args: string[])
     const hostname: string = args[2];
     let host: string;
     let port: number;
-    if(hostname.split) {
+    if(hostname) {
         const frags = hostname.split(":");
         if(ValidIpAddressRegex.test(frags[0]) || ValidHostnameRegex.test(frags[0])) {
             host = frags[0];
@@ -60,7 +60,7 @@ async function main(args: string[])
             log.info("Getting state!");
             const bulb = new FluxBulb(host, port, opts);
             const state = await bulb.getState();
-            console.log(`   On: ${state.on}`);
+            console.log(state.toString());
         });
     program.command("on")
         .description("Turn the bulb on")
@@ -87,7 +87,20 @@ async function main(args: string[])
             bulb.setRGB(red, green, blue);
         });
 
-    if(!host) { return console.log(program.usage()); }
-    program.parse(args);
+    program.command("brighten")
+        .description("Make the bulb brighter")
+        .action((percent) => {
+            const bulb = new FluxBulb(host, port, opts);
+            bulb.brighten(percent);
+        });
+    program.command("darken")
+        .description("Make the bulb darker")
+        .action((percent) => {
+            const bulb = new FluxBulb(host, port, opts);
+            bulb.darken(percent);
+        });
+
+    if(!host) { console.log(program.usage()); }
+    else { program.parse(args); }
 }
 if(require.main === module) { main(process.argv); }
